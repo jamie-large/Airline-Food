@@ -59,7 +59,7 @@ def main():
 
 			continue
 		
-		# Move pointer up the stack if possible
+		# Move pointer down the stack if possible
 		if code[c:c+3] == "Um,":
 			if pointer == -1:
 				sys.exit("ERROR: Pointer uninitialized")
@@ -68,7 +68,7 @@ def main():
 			c = c + 4
 			continue
 
-		# Move pointer down the stack if possible
+		# Move pointer up the stack if possible
 		if code[c:c+5] == "Yeah,":
 			if pointer == -1:
 				sys.exit("ERROR: Pointer uninitialized")
