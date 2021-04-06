@@ -4,7 +4,7 @@
 # Version 1.0
 import sys
 
-debug = True
+debug = False
 lookup_table = dict()
 stack = []
 labels = []
@@ -63,8 +63,8 @@ def main():
 		if code[c:c+3] == "Um,":
 			if pointer == -1:
 				sys.exit("ERROR: Pointer uninitialized")
-			if pointer < len(stack) - 1:
-				pointer = pointer + 1
+			if pointer > 0:
+				pointer = pointer - 1
 			c = c + 4
 			continue
 
@@ -72,8 +72,8 @@ def main():
 		if code[c:c+5] == "Yeah,":
 			if pointer == -1:
 				sys.exit("ERROR: Pointer uninitialized")
-			if pointer > 0:
-				pointer = pointer - 1
+			if pointer < len(stack) - 1:
+				pointer = pointer + 1
 			c = c + 6
 			continue
 
@@ -163,6 +163,7 @@ def main():
 
 		
 		c += 1
+	print()
 
 
 
@@ -179,7 +180,7 @@ def read_variable(code, stop_char):
 
 	return code[0:c]
 
-# Prints the stack of variables (useful for debugging)
+# Prints the stack of variables (useful for debugging/visualizing)
 def print_stack():
 	reverse_lookup_table = {v: k for k, v in lookup_table.items()}
 
@@ -194,6 +195,6 @@ def print_stack():
 		else:
 			print(str(i) + ": " + str(stack[i]))
 
-	print
+	print('\n')
 
 main()
