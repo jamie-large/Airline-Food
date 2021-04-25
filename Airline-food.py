@@ -31,6 +31,7 @@ def main():
 	pointer = -1
 	
 	c = 0
+	skipping = 0
 	while True:
 		if debug:
 			print_stack()
@@ -41,6 +42,9 @@ def main():
 		# Add variable to stack
 		if code[c:c+16] == "You ever notice " or code[c:c+21] == "What's the deal with ":
 			c = c + 16 if code[c:c+16] == "You ever notice " else c + 21
+
+			if skipping > 0:
+				continue
 			
 			var_name = read_variable(code[c:], '?')
 			if (var_name == -1): break
@@ -63,23 +67,37 @@ def main():
 		if code[c:c+3] == "Um,":
 			if pointer == -1:
 				sys.exit("ERROR: Pointer uninitialized")
+			
+			c = c + 4
+			
+			if skipping > 0:
+				continue
+
 			if pointer > 0:
 				pointer = pointer - 1
-			c = c + 4
+			
 			continue
 
 		# Move pointer up the stack if possible
 		if code[c:c+5] == "Yeah,":
 			if pointer == -1:
 				sys.exit("ERROR: Pointer uninitialized")
+
+			c = c + 6
+
+			if skipping > 0:
+				continue
 			if pointer < len(stack) - 1:
 				pointer = pointer + 1
-			c = c + 6
+			
 			continue
 
 		# Set the pointer
 		if code[c:c+17] == "Let's talk about ":
 			c = c + 17
+
+			if skipping > 0:
+				continue
 
 			var_name = read_variable(code[c:], '.')
 			if (var_name == -1): break
@@ -95,6 +113,9 @@ def main():
 		# Add/subtract/multiply to the pointer's position
 		if code[c:c+16] == "It's kinda like " or code[c:c+9] == "Not like " or code[c:c+10] == "Just like ":
 			c = c + 16 if code[c:c+16] == "It's kinda like " else c + 9 if code[c:c+9] == "Not like " else c+10
+
+			if skipping > 0:
+				continue
 
 			var_name = read_variable(code[c:], '.')
 			if (var_name == -1): break
@@ -114,9 +135,17 @@ def main():
 			c = c + len(var_name) + 2
 			continue
 
-		# Add a label
+		# Add a label if the value in the pointer is not equal to 0
 		if code[c:c+5] == "So...":
+			if pointer == -1:
+				sys.exit("ERROR: Pointer uninitialized")
+
 			c = c+5
+
+			if stack[pointer] == 0 or skipping > 0:
+				skipping = skipping + 1
+				continue
+
 			labels.append(c)
 			continue
 
@@ -124,6 +153,13 @@ def main():
 		if code[c:c+12] == "Moving on...":
 			if pointer == -1:
 				sys.exit("ERROR: Pointer uninitialized")
+
+			c = c+12
+
+			if skipping > 0:
+				skipping = skipping - 1
+				continue
+
 			if not labels:
 				sys.exit("ERROR: No corresponding 'So...'")
 
@@ -131,13 +167,18 @@ def main():
 				c = labels[-1]
 			else:
 				labels.pop()
-				c = c+12
 			continue
 
 		# Input
 		if code[c:c+6] == "Right?":
 			if pointer == -1:
 				sys.exit("ERROR: Pointer uninitialized")
+
+			c = c+6
+
+			if skipping > 0:
+				continue
+
 			while True:
 				try:
 					x = int(input())
@@ -146,19 +187,22 @@ def main():
 				else:
 					break
 			stack[pointer] = x
-			c = c+6
 			continue
 
 		# Output
 		if code[c:c+4] == "See?":
 			if pointer == -1:
 				sys.exit("ERROR: Pointer uninitialized")
+			
+			c = c+4
+
+			if skipping > 0:
+				continue
+
 			if stack[pointer] <= 0x10FFFF and stack[pointer] >= 0 and not debug:
 				print(chr(stack[pointer]), end='')
 			else:
 				print(str(stack[pointer]), end='')
-
-			c = c+4
 			continue
 
 		
